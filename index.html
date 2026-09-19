@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Study Tracker · PharmAchieve Nov 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1E2A24;
+  --ink-soft:#57635C;
+  --bg:#F1F2ED;
+  --surface:#FFFFFF;
+  --surface-alt:#F7F7F2;
+  --line:#E1E1D8;
+  --green:#2F5D50;
+  --green-dark:#203F36;
+  --green-soft:#DEE8E2;
+  --gold:#AD7C2E;
+  --gold-soft:#F0E2C4;
+  --gold-text:#7A551E;
+  --rust:#9C4430;
+  --rust-soft:#F2DED7;
+  --stone:#AFAD9F;
+  --stone-soft:#EAE9E0;
+  --font-serif:'Spectral', Georgia, 'Times New Roman', serif;
+  --font-sans:'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+*{ box-sizing:border-box; }
+[hidden]{ display:none !important; }
+html,body{ margin:0; padding:0; }
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--font-sans);
+  font-size:15px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+@media (prefers-reduced-motion: reduce){
+  *{ transition:none !important; animation:none !important; scroll-behavior:auto !important; }
+}
+button{ font-family:inherit; font-size:inherit; -webkit-appearance:none; appearance:none; }
+input,select,textarea{ font-family:inherit; }
+:focus-visible{ outline:2px solid var(--green); outline-offset:2px; }
+
+.app{ display:grid; grid-template-columns:296px 1fr; min-height:100vh; max-width:1440px; margin:0 auto; }
+
+.sidebar{
+  border-right:1px solid var(--line);
+  padding:26px 22px 24px;
+  display:flex; flex-direction:column; gap:24px;
+  position:sticky; top:0; height:100vh; overflow-y:auto;
+}
+.brand{ display:flex; align-items:center; gap:12px; }
+.brand-mark{
+  width:38px; height:38px; border-radius:9px; background:var(--green); color:#F4F2E8;
+  display:flex; align-items:center; justify-content:center; font-family:var(--font-serif);
+  font-weight:600; font-size:18px; flex-shrink:0;
+}
+.brand-text h1{ font-family:var(--font-serif); font-size:18px; margin:0; font-weight:600; }
+.brand-text p{ margin:2px 0 0; font-size:12px; color:var(--ink-soft); }
+
+.save-status{ font-size:12px; color:var(--ink-soft); display:flex; align-items:center; gap:7px; cursor:default; }
+.save-status .dot{ width:6px; height:6px; border-radius:50%; background:var(--green); flex-shrink:0; }
+.save-status.saving .dot{ background:var(--gold); }
+.save-status.error .dot{ background:var(--rust); }
+.save-status.error{ cursor:pointer; text-decoration:underline; }
+
+.headline-stat{ text-align:center; padding:14px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+.headline-value{ font-family:var(--font-serif); font-size:32px; font-weight:600; line-height:1; font-variant-numeric:tabular-nums; }
+.headline-label{ font-size:12px; color:var(--ink-soft); margin-top:5px; }
+.headline-sub{ font-size:11.5px; color:var(--ink-soft); margin-top:5px; }
+
+.sidebar h2{ font-size:12px; color:var(--ink-soft); margin:0 0 10px; font-weight:600; }
+
+.conf-summary-value{ font-family:var(--font-serif); font-size:22px; font-weight:600; }
+.conf-summary-label{ font-size:12px; color:var(--ink-soft); margin-top:2px; }
+
+.conf-dist{ display:flex; gap:5px; align-items:flex-end; height:34px; }
+.conf-dist-bar{ flex:1; background:var(--stone-soft); border-radius:2px 2px 0 0; position:relative; height:100%; }
+.conf-dist-bar b{ display:block; width:100%; background:var(--gold); border-radius:2px 2px 0 0; position:absolute; bottom:0; left:0; }
+.conf-dist-labels{ display:flex; gap:5px; margin-top:4px; }
+.conf-dist-labels span{ flex:1; text-align:center; font-size:10px; color:var(--ink-soft); }
+
+.module-nav{ display:flex; flex-direction:column; gap:2px; }
+.module-nav-item{
+  display:flex; flex-direction:column; gap:5px; padding:8px 9px; border-radius:7px;
+  cursor:pointer; border:1px solid transparent; background:none; text-align:left; width:100%; color:var(--ink);
+}
+.module-nav-item:hover{ background:var(--surface-alt); }
+.module-nav-row{ display:flex; justify-content:space-between; gap:8px; font-size:12.5px; }
+.module-nav-row span:first-child{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.module-nav-row span:last-child{ color:var(--ink-soft); font-variant-numeric:tabular-nums; flex-shrink:0; }
+.module-nav-bar{ height:4px; border-radius:2px; background:var(--stone-soft); overflow:hidden; }
+.module-nav-bar div{ height:100%; background:var(--green); }
+
+.attention-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:9px; }
+.attention-item{ border-left:3px solid var(--rust); padding:2px 0 2px 9px; cursor:pointer; }
+.attention-row{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
+.attention-item b{ font-size:12.5px; font-weight:500; }
+.conf-flag{ font-size:10px; color:var(--rust); font-weight:600; white-space:nowrap; flex-shrink:0; }
+.attention-module{ display:block; font-size:11px; color:var(--ink-soft); margin-top:1px; }
+.attention-empty{ font-size:12px; color:var(--ink-soft); font-style:italic; margin:0; }
+
+.ghost-btn{
+  margin-top:auto; background:none; border:1px solid var(--line); color:var(--ink-soft);
+  padding:9px 12px; border-radius:7px; font-size:12.5px; cursor:pointer;
+}
+.ghost-btn:hover{ border-color:var(--rust); color:var(--rust); }
+
+.main{ padding:30px 36px 60px; min-width:0; }
+.storage-banner{ background:var(--rust-soft); border:1px solid var(--rust); color:var(--rust); border-radius:10px; padding:12px 16px; margin-bottom:18px; font-size:13.5px; display:flex; flex-direction:column; gap:2px; }
+.storage-banner strong{ font-weight:600; }
+.page-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:18px; }
+.page-head h2{ font-family:var(--font-serif); font-size:25px; margin:0 0 5px; font-weight:600; }
+.page-head p{ margin:0; color:var(--ink-soft); font-size:13.5px; }
+.info-btn{
+  border:1px solid var(--line); background:var(--surface); width:30px; height:30px; border-radius:50%;
+  cursor:pointer; font-family:var(--font-serif); color:var(--ink-soft); flex-shrink:0; font-size:14px;
+}
+.info-btn:hover{ border-color:var(--green); color:var(--green); }
+
+.report-bar{ display:flex; flex-wrap:wrap; background:var(--surface); border:1px solid var(--line); border-radius:10px; margin-bottom:20px; overflow:hidden; }
+.report-stat{ flex:1 1 0; min-width:110px; padding:15px 16px; border-right:1px solid var(--line); border-bottom:1px solid transparent; }
+.report-stat:last-child{ border-right:none; }
+.report-stat b{ display:block; font-family:var(--font-serif); font-size:21px; font-weight:600; font-variant-numeric:tabular-nums; }
+.report-stat span{ font-size:11.5px; color:var(--ink-soft); }
+
+.controls{ display:flex; flex-wrap:wrap; gap:9px; align-items:center; margin-bottom:18px; }
+.search-input{ flex:1 1 180px; padding:9px 12px; border:1px solid var(--line); border-radius:7px; background:var(--surface); font-size:13.5px; color:var(--ink); }
+.chip-group{ display:flex; gap:6px; flex-wrap:wrap; }
+.chip{ padding:6px 12px; border-radius:20px; border:1px solid var(--line); background:var(--surface); font-size:12.5px; cursor:pointer; color:var(--ink-soft); }
+.chip.active{ background:var(--green); border-color:var(--green); color:#fff; }
+.add-btn{ padding:9px 14px; border-radius:7px; border:1px solid var(--green); background:var(--green); color:#fff; font-size:13px; cursor:pointer; white-space:nowrap; }
+.add-btn.secondary{ background:none; color:var(--green-dark); }
+.add-btn.secondary:hover{ background:var(--green-soft); }
+
+.module-section{ margin-bottom:12px; border:1px solid var(--line); border-radius:10px; background:var(--surface); overflow:hidden; }
+.module-header{ width:100%; display:flex; align-items:center; gap:14px; padding:13px 16px; background:var(--surface-alt); border:none; cursor:pointer; text-align:left; }
+.module-header-title{ font-family:var(--font-serif); font-weight:600; font-size:15px; flex:0 0 auto; min-width:200px; }
+.module-header-bar{ flex:1; height:6px; border-radius:3px; background:var(--stone-soft); overflow:hidden; display:block; }
+.module-header-bar div{ height:100%; background:var(--green); }
+.module-header-frac{ font-size:12.5px; color:var(--ink-soft); font-variant-numeric:tabular-nums; width:48px; text-align:right; flex-shrink:0; }
+.module-chevron{ width:8px; height:8px; border-right:2px solid var(--ink-soft); border-bottom:2px solid var(--ink-soft); transform:rotate(45deg); transition:transform .15s ease; flex-shrink:0; }
+.module-section.collapsed .module-chevron{ transform:rotate(-45deg); }
+.module-section.collapsed .module-body{ display:none; }
+
+.topic-row{ border-top:1px solid var(--line); padding:11px 16px; }
+.topic-row:first-child{ border-top:none; }
+.topic-row.flash{ animation:flashRow 1.1s ease; }
+@keyframes flashRow{ 0%{ background:var(--gold-soft); } 100%{ background:transparent; } }
+.topic-main{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.topic-name-wrap{ flex:1 1 200px; min-width:160px; }
+.topic-name{ font-family:var(--font-serif); font-size:14.5px; font-weight:500; }
+.row-remove{ background:none; border:none; color:var(--stone); cursor:pointer; font-size:19px; line-height:1; padding:3px 7px; border-radius:6px; flex-shrink:0; }
+.row-remove:hover{ color:var(--rust); background:var(--rust-soft); }
+
+.stage-tags{ display:flex; gap:5px; flex-wrap:wrap; }
+.stage-tag{
+  border:none; border-radius:12px; padding:4px 10px; font-size:11px; font-weight:500;
+  cursor:pointer; white-space:nowrap; font-family:var(--font-sans);
+}
+.stage-tag.done{ background:var(--green) !important; color:#fff !important; }
+.stage-tag.s1{ background:#E1EBF4; color:#3E6690; }
+.stage-tag.s2{ background:#EAE1F2; color:#6B4C93; }
+.stage-tag.s3{ background:var(--gold-soft); color:var(--gold-text); }
+.stage-tag.s4{ background:#DCE6F0; color:#1B3A5C; }
+.stage-tag.s5{ background:#F2E1EA; color:#8C3F6E; }
+.stage-tag.s6{ background:#F5E4D2; color:#A05A28; }
+.stage-tag.s7{ background:#DCEFF0; color:#1F6E76; }
+.stage-frac{ font-size:11.5px; color:var(--ink-soft); width:28px; font-variant-numeric:tabular-nums; flex-shrink:0; }
+
+.conf-dots{ display:flex; gap:4px; align-items:center; }
+.conf-dot{ width:13px; height:13px; border-radius:50%; border:1.5px solid var(--gold); background:none; cursor:pointer; padding:0; }
+.conf-dot.filled{ background:var(--gold); }
+
+.row-toggle{ background:none; border:none; color:var(--ink-soft); cursor:pointer; font-size:11.5px; padding:4px 2px; display:flex; align-items:center; gap:4px; }
+.row-toggle svg{ width:8px; height:8px; }
+.row-toggle:hover{ color:var(--green-dark); }
+
+.topic-detail{ margin-top:10px; padding-top:10px; border-top:1px dashed var(--line); display:flex; flex-direction:column; gap:8px; }
+.notes-field{ width:100%; min-height:58px; border:1px solid var(--line); border-radius:6px; padding:8px 10px; font-family:var(--font-sans); font-size:13px; resize:vertical; background:var(--surface-alt); color:var(--ink); }
+.detail-meta{ display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--ink-soft); }
+.remove-link{ background:none; border:none; color:var(--rust); font-size:11.5px; cursor:pointer; padding:0; }
+.remove-link:hover{ text-decoration:underline; }
+
+.empty-state{ text-align:center; padding:50px 20px; color:var(--ink-soft); }
+
+.modal-overlay{ position:fixed; inset:0; background:rgba(24,30,27,0.45); display:none; align-items:center; justify-content:center; padding:20px; z-index:50; }
+.modal-overlay.open{ display:flex; }
+.modal{ background:var(--surface); border-radius:12px; padding:24px; max-width:420px; width:100%; box-shadow:0 16px 44px rgba(0,0,0,0.22); max-height:86vh; overflow-y:auto; }
+.modal h3{ font-family:var(--font-serif); margin:0 0 10px; font-size:18px; }
+.modal > p{ font-size:13.5px; color:var(--ink-soft); margin:0 0 16px; }
+.modal-field{ margin-bottom:12px; display:flex; flex-direction:column; gap:5px; }
+.modal-field label{ font-size:12px; color:var(--ink-soft); }
+.modal-field input, .modal-field select{ padding:8px 10px; border:1px solid var(--line); border-radius:6px; font-size:13.5px; background:var(--surface); color:var(--ink); }
+.modal-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:16px; }
+.btn{ padding:8px 16px; border-radius:6px; font-size:13px; cursor:pointer; border:1px solid var(--line); background:var(--surface); color:var(--ink); }
+.btn.primary{ background:var(--green); border-color:var(--green); color:#fff; }
+.btn.danger{ background:var(--rust); border-color:var(--rust); color:#fff; }
+
+.stage-legend{ display:flex; flex-direction:column; gap:12px; margin-bottom:4px; }
+.stage-legend-item{ display:flex; gap:10px; align-items:flex-start; }
+.stage-legend-num{ width:22px; height:22px; border-radius:5px; background:var(--green-soft); color:var(--green-dark); display:flex; align-items:center; justify-content:center; font-size:11.5px; font-weight:600; flex-shrink:0; margin-top:1px; }
+.stage-legend-item b{ display:block; font-size:13px; font-weight:600; }
+.stage-legend-item span{ font-size:12px; color:var(--ink-soft); }
+
+.hidden-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; max-height:220px; overflow-y:auto; }
+.code-field{ width:100%; min-height:130px; font-family:ui-monospace,'SF Mono','IBM Plex Mono',Menlo,Consolas,monospace; font-size:11px; padding:10px; border:1px solid var(--line); border-radius:6px; background:var(--surface-alt); color:var(--ink); resize:vertical; }
+.code-status{ font-size:12px; color:var(--ink-soft); min-height:16px; margin:6px 0 0; }
+.code-status.is-error{ color:var(--rust); }
+.hidden-list li{ display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:13px; }
+.hidden-list button{ background:none; border:1px solid var(--line); border-radius:6px; padding:4px 9px; font-size:11.5px; cursor:pointer; color:var(--green-dark); white-space:nowrap; }
+
+@media (max-width:900px){
+  .app{ grid-template-columns:1fr; }
+  .sidebar{ position:relative; height:auto; border-right:none; border-bottom:1px solid var(--line); }
+  .main{ padding:22px 16px 50px; }
+  .module-header-title{ min-width:130px; font-size:13.5px; }
+  .stage-tag{ padding:6px 10px; }
+  .conf-dot{ width:17px; height:17px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">&#8478;</div>
+      <div class="brand-text">
+        <h1>Study Tracker</h1>
+        <p>PharmAchieve MCQ prep</p>
+      </div>
+    </div>
+
+    <button class="save-status" id="saveStatus" type="button">
+      <span class="dot"></span><span class="txt">All changes saved</span>
+    </button>
+
+    <div class="headline-stat">
+      <div class="headline-value" id="ringValue">0%</div>
+      <div class="headline-label">Overall progress</div>
+      <div class="headline-sub" id="ringSub">0 of 0 topics mastered</div>
+    </div>
+
+    <div class="sidebar-block">
+      <h2>Avg. confidence, rated topics</h2>
+      <div class="conf-summary-value" id="avgConfidenceValue">&mdash;</div>
+      <div class="conf-summary-label" id="avgConfidenceLabel">Not rated yet</div>
+    </div>
+
+    <div class="sidebar-block">
+      <h2>Confidence spread</h2>
+      <div class="conf-dist" id="confDist"></div>
+      <div class="conf-dist-labels"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
+    </div>
+
+    <div class="sidebar-block">
+      <h2>Modules</h2>
+      <nav class="module-nav" id="moduleNav"></nav>
+    </div>
+
+    <div class="sidebar-block">
+      <h2>Needs attention</h2>
+      <div id="needsAttentionList"></div>
+    </div>
+
+    <button class="ghost-btn" id="hiddenTopicsBtn" type="button">Hidden topics&hellip;</button>
+    <button class="ghost-btn" id="backupBtn" type="button">Back up progress&hellip;</button>
+    <button class="ghost-btn" id="restoreBtn" type="button">Restore from backup&hellip;</button>
+    <button class="ghost-btn" id="resetBtn" type="button">Reset all progress</button>
+  </aside>
+
+  <main class="main">
+    <div class="storage-banner" id="storageBanner" hidden>
+      <strong>Your progress isn&rsquo;t saving right now.</strong>
+      <span>Your browser is blocking local storage for this file &mdash; this can happen in private/incognito windows or with strict browser privacy settings. Try a normal window, or use &ldquo;Back up progress&rdquo; in the sidebar to copy a code you can restore later.</span>
+    </div>
+    <div class="page-head">
+      <div>
+        <h2>Nov 2026 exam prep</h2>
+        <p>Move each topic through all 7 stages, in any order, and rate your confidence as you go.</p>
+      </div>
+      <button class="info-btn" id="infoBtn" type="button" title="What do the 7 stages mean?" aria-label="About the 7 study stages">?</button>
+    </div>
+
+    <div class="report-bar" id="reportBar"></div>
+
+    <div class="controls">
+      <input type="search" id="searchInput" class="search-input" placeholder="Search topics&hellip;" />
+      <div class="chip-group" id="statusChips">
+        <button class="chip active" data-value="all" type="button">All</button>
+        <button class="chip" data-value="not-started" type="button">Not started</button>
+        <button class="chip" data-value="in-progress" type="button">In progress</button>
+        <button class="chip" data-value="completed" type="button">Mastered</button>
+      </div>
+      <button class="add-btn secondary" id="expandAllBtn" type="button">Expand all</button>
+      <button class="add-btn secondary" id="collapseAllBtn" type="button">Collapse all</button>
+      <button class="add-btn" id="addTopicBtn" type="button">+ Add topic</button>
+    </div>
+
+    <div class="module-list" id="moduleList"></div>
+  </main>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal"></div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+var STAGES = [
+  {n:1, label:'Read Notes', short:'Read', desc:'A first, fast pass over your notes to get oriented before the lecture.'},
+  {n:2, label:'Watch lectures', short:'Watch', desc:'Watch the recorded or live lecture for this topic.'},
+  {n:3, label:'Study Notes (Mastery)', short:'Mastery', desc:'Study your notes until you\u2019ve truly mastered the material.'},
+  {n:4, label:'Read Notes', short:'Read', desc:'A closer read of your notes, targeting the gaps that came up.'},
+  {n:5, label:'Review', short:'Review', desc:'Revisit your notes and flag anything that still feels shaky.'},
+  {n:6, label:'Review & Summarize', short:'Summarize', desc:'Condense the topic into your own mnemonics and a high-yield summary sheet.'},
+  {n:7, label:'Review summaries & Supplement', short:'Supplement', desc:'Restudy your summary sheet and any supplemental resources.'}
+];
+
+var CONF_LABELS = ['Not rated yet','Shaky','Developing','Comfortable','Strong','Exam-ready'];
+
+var BASE_TOPICS = [{"id":"w1-principles-of-infection-antimicrobial-th","name":"Principles of Infection & Antimicrobial Therapy","moduleCode":"W1","moduleNum":1,"moduleLabel":"Infectious Disease","priority":"med-high"},{"id":"w1-pneumonia","name":"Pneumonia","moduleCode":"W1","moduleNum":1,"moduleLabel":"Infectious Disease","priority":"med-high"},{"id":"w1-urinary-tract-infections","name":"Urinary Tract Infections","moduleCode":"W1","moduleNum":1,"moduleLabel":"Infectious Disease","priority":"med-high"},{"id":"w1-hiv-opportunistic-infections","name":"HIV & Opportunistic Infections","moduleCode":"W1","moduleNum":1,"moduleLabel":"Infectious Disease","priority":"low-med"},{"id":"w1-pep-prep","name":"PEP & PrEP","moduleCode":"W1","moduleNum":1,"moduleLabel":"Infectious Disease","priority":"low-med"},{"id":"w1-pharmacokinetics-and-biopharmaceutics-1","name":"Pharmacokinetics and Biopharmaceutics 1","moduleCode":"W1","moduleNum":1,"moduleLabel":"Infectious Disease","priority":"low-med"},{"id":"w1-pharmacokinetics-and-biopharmaceutics-2","name":"Pharmacokinetics and Biopharmaceutics 2","moduleCode":"W1","moduleNum":1,"moduleLabel":"Infectious Disease","priority":"low-med"},{"id":"w1-herpes-simplex-virus","name":"Herpes Simplex Virus","moduleCode":"W1","moduleNum":1,"moduleLabel":"Infectious Disease","priority":"med-high"},{"id":"w1-sexually-transmitted-infections","name":"Sexually-Transmitted Infections","moduleCode":"W1","moduleNum":1,"moduleLabel":"Infectious Disease","priority":"med-high"},{"id":"w1-id-drug-charts","name":"ID Drug Charts","moduleCode":"W1","moduleNum":1,"moduleLabel":"Infectious Disease","priority":"med-high"},{"id":"w1-pharyngitis-bronchitis","name":"Pharyngitis & Bronchitis","moduleCode":"W1","moduleNum":1,"moduleLabel":"Infectious Disease","priority":"med-high"},{"id":"w1-sinusitis","name":"Sinusitis","moduleCode":"W1","moduleNum":1,"moduleLabel":"Infectious Disease","priority":"med-high"},{"id":"w1-tuberculosis","name":"Tuberculosis","moduleCode":"W1","moduleNum":1,"moduleLabel":"Infectious Disease","priority":"low-med"},{"id":"w1-onychomycosis","name":"Onychomycosis","moduleCode":"W1","moduleNum":1,"moduleLabel":"Infectious Disease","priority":"low-med"},{"id":"w1-meningitis","name":"Meningitis","moduleCode":"W1","moduleNum":1,"moduleLabel":"Infectious Disease","priority":"med-high"},{"id":"w1-intra-abdominal-infections","name":"Intra-abdominal Infections","moduleCode":"W1","moduleNum":1,"moduleLabel":"Infectious Disease","priority":"low-med"},{"id":"w1-infective-endocarditis","name":"Infective Endocarditis","moduleCode":"W1","moduleNum":1,"moduleLabel":"Infectious Disease","priority":"low-med"},{"id":"w2-ethics","name":"Ethics","moduleCode":"W2","moduleNum":2,"moduleLabel":"Ethics, Law & Canadian Healthcare","priority":"med-high"},{"id":"w2-canadian-healthcare-system","name":"Canadian Healthcare System","moduleCode":"W2","moduleNum":2,"moduleLabel":"Ethics, Law & Canadian Healthcare","priority":"med-high"},{"id":"w2-federal-law","name":"Federal Law","moduleCode":"W2","moduleNum":2,"moduleLabel":"Ethics, Law & Canadian Healthcare","priority":"med-high"},{"id":"w2-pharmacoeconomics","name":"Pharmacoeconomics","moduleCode":"W2","moduleNum":2,"moduleLabel":"Ethics, Law & Canadian Healthcare","priority":"low-med"},{"id":"w2-pharmacy-calculations-1","name":"Pharmacy Calculations 1","moduleCode":"W2","moduleNum":2,"moduleLabel":"Ethics, Law & Canadian Healthcare","priority":"med-high"},{"id":"w2-fungal-infections","name":"Fungal Infections","moduleCode":"W2","moduleNum":2,"moduleLabel":"Ethics, Law & Canadian Healthcare","priority":"med-high"},{"id":"w2-sepsis-septic-shock","name":"Sepsis & Septic Shock","moduleCode":"W2","moduleNum":2,"moduleLabel":"Ethics, Law & Canadian Healthcare","priority":"low-med"},{"id":"w2-osteomyelitis-ssti","name":"Osteomyelitis & SSTI","moduleCode":"W2","moduleNum":2,"moduleLabel":"Ethics, Law & Canadian Healthcare","priority":"low-med"},{"id":"w2-viral-hepatitis","name":"Viral hepatitis","moduleCode":"W2","moduleNum":2,"moduleLabel":"Ethics, Law & Canadian Healthcare","priority":"low-med"},{"id":"w2-influenza","name":"Influenza","moduleCode":"W2","moduleNum":2,"moduleLabel":"Ethics, Law & Canadian Healthcare","priority":"med-high"},{"id":"w2-diabetic-foot-infections","name":"Diabetic Foot Infections","moduleCode":"W2","moduleNum":2,"moduleLabel":"Ethics, Law & Canadian Healthcare","priority":"low-med"},{"id":"w2-acute-otitis-media","name":"Acute Otitis Media","moduleCode":"W2","moduleNum":2,"moduleLabel":"Ethics, Law & Canadian Healthcare","priority":"med-high"},{"id":"w2-covid","name":"COVID","moduleCode":"W2","moduleNum":2,"moduleLabel":"Ethics, Law & Canadian Healthcare","priority":"low-med"},{"id":"w2-tick-borne-infections","name":"Tick Borne Infections","moduleCode":"W2","moduleNum":2,"moduleLabel":"Ethics, Law & Canadian Healthcare","priority":"med-high"},{"id":"w2-fever","name":"Fever","moduleCode":"W2","moduleNum":2,"moduleLabel":"Ethics, Law & Canadian Healthcare","priority":"low-med"},{"id":"w3-pharmacy-management-module-1-community-p","name":"Pharmacy Management Module 1: Community Pharmacy","moduleCode":"W3","moduleNum":3,"moduleLabel":"Pharmacy Management","priority":"med-high"},{"id":"w3-evidence-based-medicine-study-design-par","name":"Evidence-Based Medicine & Study Design Part 1","moduleCode":"W3","moduleNum":3,"moduleLabel":"Pharmacy Management","priority":"unmarked"},{"id":"w3-diversity-equity-inclusion-dei-sdoh-heal","name":"Diversity, Equity, Inclusion (DEI): SDOH, Health Equity, Indigenous Health, Cultural Safety","moduleCode":"W3","moduleNum":3,"moduleLabel":"Pharmacy Management","priority":"med-high"},{"id":"w3-evidence-based-medicine-study-design-par-2","name":"Evidence-Based Medicine & Study Design Part 2","moduleCode":"W3","moduleNum":3,"moduleLabel":"Pharmacy Management","priority":"unmarked"},{"id":"w3-pharmacy-management-module-2-formulary-b","name":"Pharmacy Management Module 2: Formulary, Billing, and Services","moduleCode":"W3","moduleNum":3,"moduleLabel":"Pharmacy Management","priority":"med-high"},{"id":"w3-pharmacy-management-module-3-management-","name":"Pharmacy Management Module 3: Management and Leadership","moduleCode":"W3","moduleNum":3,"moduleLabel":"Pharmacy Management","priority":"med-high"},{"id":"w3-pharmacy-calculations-2","name":"Pharmacy Calculations 2","moduleCode":"W3","moduleNum":3,"moduleLabel":"Pharmacy Management","priority":"med-high"},{"id":"w3-compounding","name":"Compounding","moduleCode":"W3","moduleNum":3,"moduleLabel":"Pharmacy Management","priority":"low-med"},{"id":"w3-therapeutic-drug-monitoring","name":"Therapeutic Drug Monitoring","moduleCode":"W3","moduleNum":3,"moduleLabel":"Pharmacy Management","priority":"low-med"},{"id":"w3-transgender-health","name":"Transgender Health","moduleCode":"W3","moduleNum":3,"moduleLabel":"Pharmacy Management","priority":"low-med"},{"id":"w3-soap-notes","name":"SOAP Notes","moduleCode":"W3","moduleNum":3,"moduleLabel":"Pharmacy Management","priority":"low-med"},{"id":"w3-maid","name":"MAID","moduleCode":"W3","moduleNum":3,"moduleLabel":"Pharmacy Management","priority":"low-med"},{"id":"w3-tpn-iv-administration","name":"TPN & IV Administration","moduleCode":"W3","moduleNum":3,"moduleLabel":"Pharmacy Management","priority":"low-med"},{"id":"w3-insurance-calculations","name":"Insurance Calculations","moduleCode":"W3","moduleNum":3,"moduleLabel":"Pharmacy Management","priority":"low-med"},{"id":"w3-hospital-pharmacy-practice","name":"Hospital Pharmacy Practice","moduleCode":"W3","moduleNum":3,"moduleLabel":"Pharmacy Management","priority":"low-med"},{"id":"w3-emergency-preparedness","name":"Emergency Preparedness","moduleCode":"W3","moduleNum":3,"moduleLabel":"Pharmacy Management","priority":"med-high"},{"id":"w3-patient-assessment","name":"Patient Assessment","moduleCode":"W3","moduleNum":3,"moduleLabel":"Pharmacy Management","priority":"med-high"},{"id":"w4-eye-health","name":"Eye Health","moduleCode":"W4","moduleNum":4,"moduleLabel":"Ophthalmology & Respiratory","priority":"med-high"},{"id":"w4-cataract-surgery-post-operative-care","name":"Cataract Surgery Post-Operative Care","moduleCode":"W4","moduleNum":4,"moduleLabel":"Ophthalmology & Respiratory","priority":"low-med"},{"id":"w4-asthma","name":"Asthma","moduleCode":"W4","moduleNum":4,"moduleLabel":"Ophthalmology & Respiratory","priority":"med-high"},{"id":"w4-copd","name":"COPD","moduleCode":"W4","moduleNum":4,"moduleLabel":"Ophthalmology & Respiratory","priority":"med-high"},{"id":"w4-poct","name":"POCT","moduleCode":"W4","moduleNum":4,"moduleLabel":"Ophthalmology & Respiratory","priority":"med-high"},{"id":"w4-glaucoma","name":"Glaucoma","moduleCode":"W4","moduleNum":4,"moduleLabel":"Ophthalmology & Respiratory","priority":"med-high"},{"id":"w4-common-anemias","name":"Common Anemias","moduleCode":"W4","moduleNum":4,"moduleLabel":"Ophthalmology & Respiratory","priority":"med-high"},{"id":"w4-oncology","name":"Oncology","moduleCode":"W4","moduleNum":4,"moduleLabel":"Ophthalmology & Respiratory","priority":"med-high"},{"id":"w4-cinv","name":"CINV","moduleCode":"W4","moduleNum":4,"moduleLabel":"Ophthalmology & Respiratory","priority":"med-high"},{"id":"w4-asthma-copd-drug-charts","name":"Asthma & COPD Drug Charts","moduleCode":"W4","moduleNum":4,"moduleLabel":"Ophthalmology & Respiratory","priority":"med-high"},{"id":"w4-allergic-rhinitis","name":"Allergic Rhinitis","moduleCode":"W4","moduleNum":4,"moduleLabel":"Ophthalmology & Respiratory","priority":"med-high"},{"id":"w4-smoking-cessation","name":"Smoking Cessation","moduleCode":"W4","moduleNum":4,"moduleLabel":"Ophthalmology & Respiratory","priority":"med-high"},{"id":"w4-croup","name":"Croup","moduleCode":"W4","moduleNum":4,"moduleLabel":"Ophthalmology & Respiratory","priority":"low-med"},{"id":"w4-drug-induced-pulmonary-toxicity","name":"Drug-induced Pulmonary Toxicity","moduleCode":"W4","moduleNum":4,"moduleLabel":"Ophthalmology & Respiratory","priority":"low-med"},{"id":"w5-schizophrenia","name":"Schizophrenia","moduleCode":"W5","moduleNum":5,"moduleLabel":"Psychiatry","priority":"med-high"},{"id":"w5-bipolar-disorder","name":"Bipolar Disorder","moduleCode":"W5","moduleNum":5,"moduleLabel":"Psychiatry","priority":"low-med"},{"id":"w5-adhd","name":"ADHD","moduleCode":"W5","moduleNum":5,"moduleLabel":"Psychiatry","priority":"med-high"},{"id":"w5-insomnia","name":"Insomnia","moduleCode":"W5","moduleNum":5,"moduleLabel":"Psychiatry","priority":"low-med"},{"id":"w5-dementia","name":"Dementia","moduleCode":"W5","moduleNum":5,"moduleLabel":"Psychiatry","priority":"med-high"},{"id":"w5-acute-agitation","name":"Acute Agitation","moduleCode":"W5","moduleNum":5,"moduleLabel":"Psychiatry","priority":"low-med"},{"id":"w5-anxiety-and-related-disorders","name":"Anxiety and Related Disorders","moduleCode":"W5","moduleNum":5,"moduleLabel":"Psychiatry","priority":"med-high"},{"id":"w5-depression","name":"Depression","moduleCode":"W5","moduleNum":5,"moduleLabel":"Psychiatry","priority":"med-high"},{"id":"w5-mental-health-drug-charts","name":"Mental Health Drug Charts","moduleCode":"W5","moduleNum":5,"moduleLabel":"Psychiatry","priority":"med-high"},{"id":"w5-cannabis","name":"Cannabis","moduleCode":"W5","moduleNum":5,"moduleLabel":"Psychiatry","priority":"low-med"},{"id":"w5-drugs-in-pregnancy-and-lactation","name":"Drugs in pregnancy and lactation","moduleCode":"W5","moduleNum":5,"moduleLabel":"Psychiatry","priority":"low-med"},{"id":"w5-electrolyte-disorders","name":"Electrolyte Disorders","moduleCode":"W5","moduleNum":5,"moduleLabel":"Psychiatry","priority":"med-high"},{"id":"w5-pediatric-health","name":"Pediatric Health","moduleCode":"W5","moduleNum":5,"moduleLabel":"Psychiatry","priority":"low-med"},{"id":"w5-medical-abortion","name":"Medical Abortion","moduleCode":"W5","moduleNum":5,"moduleLabel":"Psychiatry","priority":"low-med"},{"id":"w5-eating-disorder","name":"Eating disorder","moduleCode":"W5","moduleNum":5,"moduleLabel":"Psychiatry","priority":"low-med"},{"id":"w5-drug-withdrawal-syndromes","name":"Drug Withdrawal Syndromes","moduleCode":"W5","moduleNum":5,"moduleLabel":"Psychiatry","priority":"low-med"},{"id":"w5-travel-medicine","name":"Travel Medicine","moduleCode":"W5","moduleNum":5,"moduleLabel":"Psychiatry","priority":"med-high"},{"id":"w5-otitis-externa","name":"Otitis Externa","moduleCode":"W5","moduleNum":5,"moduleLabel":"Psychiatry","priority":"low-med"},{"id":"w6-constipation","name":"Constipation","moduleCode":"W6","moduleNum":6,"moduleLabel":"GI, GU & Reproduction","priority":"med-high"},{"id":"w6-diarrhea","name":"Diarrhea","moduleCode":"W6","moduleNum":6,"moduleLabel":"GI, GU & Reproduction","priority":"med-high"},{"id":"w6-nausea-vomiting","name":"Nausea & Vomiting","moduleCode":"W6","moduleNum":6,"moduleLabel":"GI, GU & Reproduction","priority":"med-high"},{"id":"w6-contraception","name":"Contraception","moduleCode":"W6","moduleNum":6,"moduleLabel":"GI, GU & Reproduction","priority":"med-high"},{"id":"w6-reproductive-health","name":"Reproductive Health","moduleCode":"W6","moduleNum":6,"moduleLabel":"GI, GU & Reproduction","priority":"low-med"},{"id":"w6-ulcerative-colitis-crohn-s-disease","name":"Ulcerative Colitis & Crohn's Disease","moduleCode":"W6","moduleNum":6,"moduleLabel":"GI, GU & Reproduction","priority":"low-med"},{"id":"w6-dyspepsia-gerd-pud","name":"Dyspepsia, GERD & PUD","moduleCode":"W6","moduleNum":6,"moduleLabel":"GI, GU & Reproduction","priority":"med-high"},{"id":"w6-menopause","name":"Menopause","moduleCode":"W6","moduleNum":6,"moduleLabel":"GI, GU & Reproduction","priority":"med-high"},{"id":"w6-ibs","name":"IBS","moduleCode":"W6","moduleNum":6,"moduleLabel":"GI, GU & Reproduction","priority":"low-med"},{"id":"w6-hepatic-encephalopathy","name":"Hepatic Encephalopathy","moduleCode":"W6","moduleNum":6,"moduleLabel":"GI, GU & Reproduction","priority":"low-med"},{"id":"w6-bph","name":"BPH","moduleCode":"W6","moduleNum":6,"moduleLabel":"GI, GU & Reproduction","priority":"med-high"},{"id":"w6-erectile-dysfunction","name":"Erectile Dysfunction","moduleCode":"W6","moduleNum":6,"moduleLabel":"GI, GU & Reproduction","priority":"med-high"},{"id":"w6-women-s-health","name":"Women's Health","moduleCode":"W6","moduleNum":6,"moduleLabel":"GI, GU & Reproduction","priority":"low-med"},{"id":"w6-upper-gi-bleeding","name":"Upper GI Bleeding","moduleCode":"W6","moduleNum":6,"moduleLabel":"GI, GU & Reproduction","priority":"low-med"},{"id":"w6-systemic-lupus-erythematosus","name":"Systemic Lupus Erythematosus","moduleCode":"W6","moduleNum":6,"moduleLabel":"GI, GU & Reproduction","priority":"low-med"},{"id":"w6-pancreatitis","name":"Pancreatitis","moduleCode":"W6","moduleNum":6,"moduleLabel":"GI, GU & Reproduction","priority":"med-high"},{"id":"w6-urinary-incontinence","name":"Urinary Incontinence","moduleCode":"W6","moduleNum":6,"moduleLabel":"GI, GU & Reproduction","priority":"low-med"},{"id":"w6-drug-interactions","name":"Drug Interactions","moduleCode":"W6","moduleNum":6,"moduleLabel":"GI, GU & Reproduction","priority":"med-high"},{"id":"w7-osteoporosis","name":"Osteoporosis","moduleCode":"W7","moduleNum":7,"moduleLabel":"MSK & Neurology","priority":"med-high"},{"id":"w7-gout","name":"Gout","moduleCode":"W7","moduleNum":7,"moduleLabel":"MSK & Neurology","priority":"low-med"},{"id":"w7-rheumatoid-arthritis","name":"Rheumatoid Arthritis","moduleCode":"W7","moduleNum":7,"moduleLabel":"MSK & Neurology","priority":"med-high"},{"id":"w7-osteoarthritis","name":"Osteoarthritis","moduleCode":"W7","moduleNum":7,"moduleLabel":"MSK & Neurology","priority":"med-high"},{"id":"w7-parkinson-s-disease","name":"Parkinson's Disease","moduleCode":"W7","moduleNum":7,"moduleLabel":"MSK & Neurology","priority":"med-high"},{"id":"w7-pain-management-and-palliative-care","name":"Pain Management and Palliative Care","moduleCode":"W7","moduleNum":7,"moduleLabel":"MSK & Neurology","priority":"med-high"},{"id":"w7-headache-migraine","name":"Headache & Migraine","moduleCode":"W7","moduleNum":7,"moduleLabel":"MSK & Neurology","priority":"med-high"},{"id":"w7-seizures","name":"Seizures","moduleCode":"W7","moduleNum":7,"moduleLabel":"MSK & Neurology","priority":"med-high"},{"id":"w7-opioid-and-alcohol-use-disorder","name":"Opioid and Alcohol Use Disorder","moduleCode":"W7","moduleNum":7,"moduleLabel":"MSK & Neurology","priority":"med-high"},{"id":"w7-msk-pain","name":"MSK Pain","moduleCode":"W7","moduleNum":7,"moduleLabel":"MSK & Neurology","priority":"low-med"},{"id":"w7-fibromyalgia","name":"Fibromyalgia","moduleCode":"W7","moduleNum":7,"moduleLabel":"MSK & Neurology","priority":"low-med"},{"id":"w7-chronic-spasticity","name":"Chronic Spasticity","moduleCode":"W7","moduleNum":7,"moduleLabel":"MSK & Neurology","priority":"low-med"},{"id":"w7-bell-palsy-and-gbs","name":"Bell Palsy and GBS","moduleCode":"W7","moduleNum":7,"moduleLabel":"MSK & Neurology","priority":"low-med"},{"id":"w7-chronic-fatigue-syndrome","name":"Chronic Fatigue Syndrome","moduleCode":"W7","moduleNum":7,"moduleLabel":"MSK & Neurology","priority":"low-med"},{"id":"w7-multiple-sclerosis","name":"Multiple Sclerosis","moduleCode":"W7","moduleNum":7,"moduleLabel":"MSK & Neurology","priority":"low-med"},{"id":"w7-restless-leg-syndrome","name":"Restless Leg Syndrome","moduleCode":"W7","moduleNum":7,"moduleLabel":"MSK & Neurology","priority":"low-med"},{"id":"w7-polymyalgia-rheumatic-giant-cell-arterit","name":"Polymyalgia Rheumatic & Giant Cell Arteritis","moduleCode":"W7","moduleNum":7,"moduleLabel":"MSK & Neurology","priority":"low-med"},{"id":"w7-pain-management-drug-charts","name":"Pain Management Drug Charts","moduleCode":"W7","moduleNum":7,"moduleLabel":"MSK & Neurology","priority":"med-high"},{"id":"w8-evidence-based-medicine-ebm-review","name":"Evidence-Based Medicine (EBM) REVIEW","moduleCode":"W8","moduleNum":8,"moduleLabel":"Case Review","priority":"review"},{"id":"w8-100-case-review","name":"100 Case Review","moduleCode":"W8","moduleNum":8,"moduleLabel":"Case Review","priority":"review"},{"id":"w8-ethics-cases","name":"Ethics Cases","moduleCode":"W8","moduleNum":8,"moduleLabel":"Case Review","priority":"review"},{"id":"w8-management-cases","name":"Management Cases","moduleCode":"W8","moduleNum":8,"moduleLabel":"Case Review","priority":"review"},{"id":"w8-self-study-topic-cases","name":"Self-Study Topic Cases","moduleCode":"W8","moduleNum":8,"moduleLabel":"Case Review","priority":"review"},{"id":"w8-drug-interactions-cases","name":"Drug Interactions Cases","moduleCode":"W8","moduleNum":8,"moduleLabel":"Case Review","priority":"review"},{"id":"w8-intra-inter-professional-collaboration","name":"Intra- & Inter-professional Collaboration","moduleCode":"W8","moduleNum":8,"moduleLabel":"Case Review","priority":"med-high"},{"id":"w8-health-promotion-injections-immunization","name":"Health Promotion, Injections & Immunizations","moduleCode":"W8","moduleNum":8,"moduleLabel":"Case Review","priority":"low-med"},{"id":"w8-safety-documentation","name":"Safety & Documentation","moduleCode":"W8","moduleNum":8,"moduleLabel":"Case Review","priority":"med-high"},{"id":"w8-medication-reconcilliation-professional-","name":"Medication Reconcilliation, Professional Communication, Patient Care Process","moduleCode":"W8","moduleNum":8,"moduleLabel":"Case Review","priority":"low-med"},{"id":"w8-drug-approval-process","name":"Drug Approval Process","moduleCode":"W8","moduleNum":8,"moduleLabel":"Case Review","priority":"low-med"},{"id":"w8-clinical-audits","name":"Clinical Audits","moduleCode":"W8","moduleNum":8,"moduleLabel":"Case Review","priority":"low-med"},{"id":"w10-hypertension","name":"Hypertension","moduleCode":"W10","moduleNum":10,"moduleLabel":"Cardiology","priority":"med-high"},{"id":"w10-dyslipidemia","name":"Dyslipidemia","moduleCode":"W10","moduleNum":10,"moduleLabel":"Cardiology","priority":"med-high"},{"id":"w10-acs-stable-angina","name":"ACS & Stable Angina","moduleCode":"W10","moduleNum":10,"moduleLabel":"Cardiology","priority":"med-high"},{"id":"w10-stroke-tia","name":"Stroke & TIA","moduleCode":"W10","moduleNum":10,"moduleLabel":"Cardiology","priority":"med-high"},{"id":"w10-heart-failure","name":"Heart Failure","moduleCode":"W10","moduleNum":10,"moduleLabel":"Cardiology","priority":"med-high"},{"id":"w10-atrial-fibrillation","name":"Atrial Fibrillation","moduleCode":"W10","moduleNum":10,"moduleLabel":"Cardiology","priority":"med-high"},{"id":"w10-dvt-pe","name":"DVT & PE","moduleCode":"W10","moduleNum":10,"moduleLabel":"Cardiology","priority":"med-high"},{"id":"w10-diabetes","name":"Diabetes","moduleCode":"W10","moduleNum":10,"moduleLabel":"Cardiology","priority":"med-high"},{"id":"w10-cvd-drug-charts","name":"CVD Drug Charts","moduleCode":"W10","moduleNum":10,"moduleLabel":"Cardiology","priority":"med-high"},{"id":"w10-warfarin-dosing","name":"Warfarin dosing","moduleCode":"W10","moduleNum":10,"moduleLabel":"Cardiology","priority":"med-high"},{"id":"w10-raynaud-s-phenomenon","name":"Raynaud's Phenomenon","moduleCode":"W10","moduleNum":10,"moduleLabel":"Cardiology","priority":"low-med"},{"id":"w10-syncope","name":"Syncope","moduleCode":"W10","moduleNum":10,"moduleLabel":"Cardiology","priority":"low-med"},{"id":"w10-cardiology-summaries-found-under-each-to","name":"Cardiology Summaries [found under each topic]","moduleCode":"W10","moduleNum":10,"moduleLabel":"Cardiology","priority":"review"},{"id":"w10-lice-scabies","name":"Lice & Scabies","moduleCode":"W10","moduleNum":10,"moduleLabel":"Cardiology","priority":"med-high"},{"id":"w10-pruritus","name":"Pruritus","moduleCode":"W10","moduleNum":10,"moduleLabel":"Cardiology","priority":"low-med"},{"id":"w10-burns-and-sunburns","name":"Burns and Sunburns","moduleCode":"W10","moduleNum":10,"moduleLabel":"Cardiology","priority":"low-med"},{"id":"w10-diabetes-drug-chart","name":"Diabetes Drug Chart","moduleCode":"W10","moduleNum":10,"moduleLabel":"Cardiology","priority":"med-high"},{"id":"w10-obesity","name":"Obesity","moduleCode":"W10","moduleNum":10,"moduleLabel":"Cardiology","priority":"low-med"},{"id":"w11-hypothyroidism","name":"Hypothyroidism","moduleCode":"W11","moduleNum":11,"moduleLabel":"Nephrology & Endocrine","priority":"low-med"},{"id":"w11-hyperthyroidism","name":"Hyperthyroidism","moduleCode":"W11","moduleNum":11,"moduleLabel":"Nephrology & Endocrine","priority":"low-med"},{"id":"w11-acute-kidney-injury","name":"Acute Kidney Injury","moduleCode":"W11","moduleNum":11,"moduleLabel":"Nephrology & Endocrine","priority":"med-high"},{"id":"w11-chronic-kidney-disease","name":"Chronic Kidney Disease","moduleCode":"W11","moduleNum":11,"moduleLabel":"Nephrology & Endocrine","priority":"med-high"},{"id":"w11-acne","name":"Acne","moduleCode":"W11","moduleNum":11,"moduleLabel":"Nephrology & Endocrine","priority":"med-high"},{"id":"w11-rosacea","name":"Rosacea","moduleCode":"W11","moduleNum":11,"moduleLabel":"Nephrology & Endocrine","priority":"med-high"},{"id":"w11-warts","name":"Warts","moduleCode":"W11","moduleNum":11,"moduleLabel":"Nephrology & Endocrine","priority":"low-med"},{"id":"w11-psoriasis","name":"Psoriasis","moduleCode":"W11","moduleNum":11,"moduleLabel":"Nephrology & Endocrine","priority":"low-med"},{"id":"w11-atopic-dermatitis","name":"Atopic Dermatitis","moduleCode":"W11","moduleNum":11,"moduleLabel":"Nephrology & Endocrine","priority":"med-high"},{"id":"w11-corns-and-calluses","name":"Corns and Calluses","moduleCode":"W11","moduleNum":11,"moduleLabel":"Nephrology & Endocrine","priority":"low-med"},{"id":"w11-urticaria-insect-bites-and-stings","name":"Urticaria: Insect Bites and Stings","moduleCode":"W11","moduleNum":11,"moduleLabel":"Nephrology & Endocrine","priority":"low-med"}];
+
+var STORAGE_KEY = 'pharmachieve-tracker-v1';
+
+var state = { progress:{}, hidden:{}, custom:[], collapsed:{} };
+var filters = { search:'', status:'all' };
+var notesSaveTimer = null, confirmCallback = null;
+var storageBroken = false;
+
+function byId(id){ return document.getElementById(id); }
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function slugify(s){ return String(s).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
+function prefersReducedMotion(){ return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
+
+/* ---------- storage: plain localStorage, so this file works standalone ---------- */
+function setSaveStatus(status){
+  var el = byId('saveStatus');
+  var banner = byId('storageBanner');
+  if(el){
+    el.classList.remove('saving','error');
+    var txt = el.querySelector('.txt');
+    if(status==='saving'){ el.classList.add('saving'); txt.textContent='Saving\u2026'; }
+    else if(status==='error'){ el.classList.add('error'); txt.textContent='Save failed \u2014 tap to retry'; }
+    else if(status==='nostorage'){ txt.textContent='Storage unavailable'; }
+    else { txt.textContent='All changes saved'; }
+  }
+  if(banner) banner.hidden = (status !== 'nostorage');
+}
+function loadState(){
+  try{
+    var raw = window.localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      var parsed = JSON.parse(raw);
+      state.progress = parsed.progress || {};
+      state.hidden = parsed.hidden || {};
+      state.custom = parsed.custom || [];
+      state.collapsed = parsed.collapsed || {};
+    }
+  }catch(e){
+    // Either localStorage is blocked entirely (some locked-down browser
+    // settings), or the saved value was corrupted. Either way, fall back
+    // to a blank slate rather than crashing.
+    storageBroken = true;
+  }
+}
+function persistNow(){
+  try{
+    var payload = JSON.stringify({progress:state.progress, hidden:state.hidden, custom:state.custom, collapsed:state.collapsed});
+    window.localStorage.setItem(STORAGE_KEY, payload);
+    setSaveStatus('saved');
+  }catch(e){
+    storageBroken = true;
+    setSaveStatus('nostorage');
+  }
+}
+
+/* ---------- data helpers ---------- */
+function allTopics(){
+  return BASE_TOPICS.filter(function(t){ return !state.hidden[t.id]; })
+    .concat(state.custom.filter(function(t){ return !state.hidden[t.id]; }));
+}
+function getProgress(id){
+  var p = state.progress[id];
+  if(!p) return {stages:{}, confidence:0, notes:'', updatedAt:null};
+  if(!p.stages) p.stages = {};
+  return p;
+}
+function ensureProgress(id){
+  if(!state.progress[id]) state.progress[id] = {stages:{}, confidence:0, notes:'', updatedAt:null};
+  return state.progress[id];
+}
+function doneCount(id){
+  var p = getProgress(id), c = 0;
+  for(var i=1;i<=7;i++){ if(p.stages[i]) c++; }
+  return c;
+}
+function statusOf(id){
+  var c = doneCount(id);
+  if(c===0) return 'not-started';
+  if(c===7) return 'completed';
+  return 'in-progress';
+}
+function computeStats(){
+  var topics = allTopics();
+  var totalStages = topics.length*7, doneStages=0, completed=0, inProgress=0, notStarted=0, rated=0, confSum=0;
+  var dist=[0,0,0,0,0], attention=[];
+  topics.forEach(function(t){
+    var d = doneCount(t.id);
+    doneStages += d;
+    var st = statusOf(t.id);
+    if(st==='completed') completed++; else if(st==='in-progress') inProgress++; else notStarted++;
+    var p = getProgress(t.id);
+    if(p.confidence>0){
+      rated++; confSum+=p.confidence; dist[p.confidence-1]++;
+      if(p.confidence<=2) attention.push({id:t.id,name:t.name,moduleLabel:t.moduleLabel,confidence:p.confidence});
+    }
+  });
+  attention.sort(function(a,b){ return a.confidence-b.confidence; });
+  return {
+    totalTopics: topics.length,
+    pct: totalStages ? Math.round(doneStages/totalStages*100) : 0,
+    completed:completed, inProgress:inProgress, notStarted:notStarted,
+    rated:rated, avgConfidence: rated ? (confSum/rated) : 0,
+    dist:dist, attention:attention.slice(0,8)
+  };
+}
+function computeModules(){
+  var topics = allTopics(), map = {};
+  topics.forEach(function(t){
+    if(!map[t.moduleCode]) map[t.moduleCode] = {code:t.moduleCode, num:t.moduleNum, label:t.moduleLabel, topics:[]};
+    map[t.moduleCode].topics.push(t);
+  });
+  var list = Object.keys(map).map(function(k){ return map[k]; });
+  list.sort(function(a,b){ return a.num-b.num; });
+  return list;
+}
+function matchesFilters(t){
+  if(filters.search && t.name.toLowerCase().indexOf(filters.search.toLowerCase())===-1) return false;
+  if(filters.status!=='all' && statusOf(t.id)!==filters.status) return false;
+  return true;
+}
+
+/* ---------- render ---------- */
+function renderAll(){ renderSidebar(); renderReportBar(); renderModules(); }
+
+function renderSidebar(){
+  var stats = computeStats();
+  byId('ringValue').textContent = stats.pct+'%';
+  byId('ringSub').textContent = stats.completed+' of '+stats.totalTopics+' topics mastered';
+  byId('avgConfidenceValue').textContent = stats.rated ? stats.avgConfidence.toFixed(1) : '\u2014';
+  byId('avgConfidenceLabel').textContent = stats.rated ? CONF_LABELS[Math.round(stats.avgConfidence)] : 'Not rated yet';
+
+  var maxDist = Math.max.apply(null, stats.dist.concat([1]));
+  byId('confDist').innerHTML = stats.dist.map(function(v){
+    var h = v ? Math.max(6, Math.round(v/maxDist*32)) : 2;
+    return '<div class="conf-dist-bar" title="'+v+' topic(s)"><b style="height:'+h+'px"></b></div>';
+  }).join('');
+
+  var modules = computeModules();
+  byId('moduleNav').innerHTML = modules.map(function(m){
+    var total = m.topics.length;
+    var done = m.topics.filter(function(t){ return statusOf(t.id)==='completed'; }).length;
+    var pct = total ? Math.round(done/total*100) : 0;
+    return '<button class="module-nav-item" data-jump="'+m.code+'" type="button">'
+      + '<div class="module-nav-row"><span>Week '+m.num+': '+escapeHtml(m.label)+'</span><span>'+done+'/'+total+'</span></div>'
+      + '<div class="module-nav-bar"><div style="width:'+pct+'%"></div></div>'
+      + '</button>';
+  }).join('');
+
+  var el = byId('needsAttentionList');
+  if(stats.attention.length===0){
+    el.innerHTML = '<p class="attention-empty">Nothing flagged yet \u2014 low-confidence topics show up here.</p>';
+  } else {
+    el.innerHTML = '<ul class="attention-list">'+stats.attention.map(function(a){
+      return '<li class="attention-item" data-jump-topic="'+a.id+'">'
+        + '<div class="attention-row"><b>'+escapeHtml(a.name)+'</b><span class="conf-flag">'+CONF_LABELS[a.confidence]+'</span></div>'
+        + '<span class="attention-module">'+escapeHtml(a.moduleLabel)+'</span></li>';
+    }).join('')+'</ul>';
+  }
+}
+
+function renderReportBar(){
+  var s = computeStats();
+  function stat(value,label){ return '<div class="report-stat"><b>'+value+'</b><span>'+label+'</span></div>'; }
+  byId('reportBar').innerHTML =
+    stat(s.pct+'%','Overall progress')
+    + stat(s.completed+' / '+s.totalTopics,'Topics mastered')
+    + stat(String(s.inProgress),'In progress')
+    + stat(String(s.notStarted),'Not started yet')
+    + stat(s.rated ? s.avgConfidence.toFixed(1) : '\u2014', 'Avg. confidence'+(s.rated ? ' (out of 5)' : ''));
+}
+
+function renderModules(){
+  var modules = computeModules();
+  var anyVisible = false;
+  var html = modules.map(function(m){
+    var filteredTopics = m.topics.filter(matchesFilters);
+    if(filteredTopics.length===0) return '';
+    anyVisible = true;
+    var total = m.topics.length;
+    var done = m.topics.filter(function(t){ return statusOf(t.id)==='completed'; }).length;
+    var pct = total ? Math.round(done/total*100) : 0;
+    var collapsed = !!state.collapsed[m.code];
+    var rowsHtml = filteredTopics.map(renderTopicRow).join('');
+    return '<section class="module-section'+(collapsed?' collapsed':'')+'" data-module="'+m.code+'" id="mod-'+m.code+'">'
+      + '<button class="module-header" data-toggle-module="'+m.code+'" type="button">'
+      + '<span class="module-header-title">Week '+m.num+': '+escapeHtml(m.label)+'</span>'
+      + '<span class="module-header-bar"><div style="width:'+pct+'%"></div></span>'
+      + '<span class="module-header-frac">'+done+'/'+total+'</span>'
+      + '<span class="module-chevron"></span>'
+      + '</button>'
+      + '<div class="module-body">'+rowsHtml+'</div>'
+      + '</section>';
+  }).join('');
+
+  if(!anyVisible){
+    html = '<div class="empty-state"><p>No topics match your filters.</p><button class="btn" id="clearFiltersBtn" type="button">Clear filters</button></div>';
+  }
+  byId('moduleList').innerHTML = html;
+}
+
+function renderTopicRow(t){
+  var p = getProgress(t.id);
+  var d = doneCount(t.id);
+  var stageTags = '';
+  for(var i=1;i<=7;i++){
+    var done = !!p.stages[i];
+    stageTags += '<button class="stage-tag s'+i+(done?' done':'')+'" data-stage-toggle="'+t.id+'" data-stage="'+i+'" type="button" title="'+escapeHtml(STAGES[i-1].label)+(done?' \u2014 done':'')+'">'+(done?'\u2713 ':'')+escapeHtml(STAGES[i-1].short)+'</button>';
+  }
+  var dots = '';
+  for(var k=1;k<=5;k++){
+    dots += '<button class="conf-dot'+(p.confidence>=k?' filled':'')+'" data-conf="'+t.id+'" data-value="'+k+'" type="button" title="'+CONF_LABELS[k]+'"></button>';
+  }
+  var updated = p.updatedAt ? new Date(p.updatedAt).toLocaleDateString(undefined,{month:'short',day:'numeric'}) : null;
+
+  return '<div class="topic-row" data-topic-row="'+t.id+'">'
+    + '<div class="topic-main">'
+    + '<div class="topic-name-wrap"><span class="topic-name">'+escapeHtml(t.name)+'</span></div>'
+    + '<div class="stage-tags">'+stageTags+'</div>'
+    + '<span class="stage-frac">'+d+'/7</span>'
+    + '<div class="conf-dots">'+dots+'</div>'
+    + '<button class="row-toggle" data-expand="'+t.id+'" type="button">notes <svg viewBox="0 0 8 8"><path d="M1 2 L4 6 L7 2" stroke="currentColor" fill="none" stroke-width="1.4"/></svg></button>'
+    + '<button class="row-remove" data-remove="'+t.id+'" type="button" title="Remove topic" aria-label="Remove topic">&times;</button>'
+    + '</div>'
+    + '<div class="topic-detail" hidden>'
+    + '<textarea class="notes-field" placeholder="Mnemonics, high-yield points, anything future-you needs\u2026" data-notes="'+t.id+'">'+escapeHtml(p.notes||'')+'</textarea>'
+    + '<div class="detail-meta"><span>'+(updated ? 'Last touched '+updated : 'Not started yet')+'</span></div>'
+    + '</div>'
+    + '</div>';
+}
+
+/* ---------- row-level refresh (avoid full re-render / focus loss) ---------- */
+function refreshRowAndStats(id){
+  var row = document.querySelector('[data-topic-row="'+id+'"]');
+  var t = allTopics().filter(function(x){ return x.id===id; })[0];
+  if(row && t){
+    var openDetail = !row.querySelector('.topic-detail').hidden;
+    row.outerHTML = renderTopicRow(t);
+    if(openDetail){
+      var nr = document.querySelector('[data-topic-row="'+id+'"]');
+      if(nr) nr.querySelector('.topic-detail').hidden = false;
+    }
+  }
+  if(t) updateModuleHeader(t.moduleCode);
+  renderSidebar();
+  renderReportBar();
+}
+function updateModuleHeader(code){
+  var section = byId('mod-'+code);
+  if(!section) return;
+  var m = computeModules().filter(function(x){ return x.code===code; })[0];
+  if(!m) return;
+  var total = m.topics.length;
+  var done = m.topics.filter(function(t){ return statusOf(t.id)==='completed'; }).length;
+  var pct = total ? Math.round(done/total*100) : 0;
+  section.querySelector('.module-header-bar div').style.width = pct+'%';
+  section.querySelector('.module-header-frac').textContent = done+'/'+total;
+}
+
+/* ---------- actions ---------- */
+function toggleStage(id, n){
+  var prog = ensureProgress(id);
+  prog.stages[n] = !prog.stages[n];
+  prog.updatedAt = new Date().toISOString();
+  persistNow();
+  refreshRowAndStats(id);
+}
+function setConfidence(id, value){
+  var prog = ensureProgress(id);
+  prog.confidence = (prog.confidence===value) ? 0 : value;
+  prog.updatedAt = new Date().toISOString();
+  persistNow();
+  refreshRowAndStats(id);
+}
+function setAllCollapsed(val){
+  computeModules().forEach(function(m){ state.collapsed[m.code] = val; });
+  persistNow();
+  renderModules();
+}
+function jumpToTopic(id){
+  var t = allTopics().filter(function(x){ return x.id===id; })[0];
+  if(!t) return;
+  if(state.collapsed[t.moduleCode]) state.collapsed[t.moduleCode] = false;
+  filters = {search:'', status:'all'};
+  byId('searchInput').value = '';
+  resetChipsToAll();
+  renderModules();
+  requestAnimationFrame(function(){
+    var row = document.querySelector('[data-topic-row="'+id+'"]');
+    if(row){
+      row.scrollIntoView({behavior: prefersReducedMotion() ? 'auto' : 'smooth', block:'center'});
+      row.classList.add('flash');
+      setTimeout(function(){ row.classList.remove('flash'); }, 1200);
+    }
+  });
+}
+function resetChipsToAll(){
+  document.querySelectorAll('.chip-group .chip').forEach(function(c){
+    c.classList.toggle('active', c.getAttribute('data-value')==='all');
+  });
+}
+
+/* ---------- modal ---------- */
+function openModal(html){ byId('modal').innerHTML = html; byId('modalOverlay').classList.add('open'); }
+function closeModal(){ byId('modalOverlay').classList.remove('open'); byId('modal').innerHTML=''; confirmCallback=null; }
+
+function openConfirm(opts){
+  confirmCallback = opts.onConfirm;
+  openModal(
+    '<h3>'+escapeHtml(opts.title)+'</h3>'
+    + '<p>'+opts.message+'</p>'
+    + '<div class="modal-actions">'
+    + '<button class="btn" id="confirmCancelBtn" type="button">Cancel</button>'
+    + '<button class="btn '+(opts.danger?'danger':'primary')+'" id="confirmOkBtn" type="button">'+escapeHtml(opts.confirmLabel||'Confirm')+'</button>'
+    + '</div>'
+  );
+  byId('confirmCancelBtn').addEventListener('click', closeModal);
+  byId('confirmOkBtn').addEventListener('click', function(){
+    var cb = confirmCallback; closeModal(); if(cb) cb();
+  });
+}
+function confirmRemoveTopic(id){
+  var t = allTopics().filter(function(x){ return x.id===id; })[0];
+  if(!t) return;
+  var isCustom = id.indexOf('custom-')===0;
+  openConfirm({
+    title: isCustom ? 'Remove this topic?' : 'Hide this topic?',
+    message: isCustom
+      ? 'This deletes &ldquo;'+escapeHtml(t.name)+'&rdquo; and any progress on it. This cannot be undone.'
+      : '&ldquo;'+escapeHtml(t.name)+'&rdquo; will be hidden from your tracker and left out of your stats. Restore it anytime from &ldquo;Hidden topics&hellip;&rdquo; in the sidebar.',
+    confirmLabel: isCustom ? 'Delete topic' : 'Hide topic',
+    danger:true,
+    onConfirm:function(){
+      if(isCustom){
+        state.custom = state.custom.filter(function(x){ return x.id!==id; });
+        delete state.progress[id];
+      } else {
+        state.hidden[id] = true;
+      }
+      persistNow();
+      renderAll();
+    }
+  });
+}
+function openResetConfirm(){
+  openConfirm({
+    title:'Reset all progress?',
+    message:'This clears every stage, confidence rating, and note on every topic. Hidden and added topics stay as they are \u2014 only progress resets. This cannot be undone.',
+    confirmLabel:'Reset everything',
+    danger:true,
+    onConfirm:function(){ state.progress = {}; persistNow(); renderAll(); }
+  });
+}
+function openInfoModal(){
+  var html = '<h3>The 7 study stages</h3><p>Tap any tag on a topic to mark that stage done, in any order. It turns green with a checkmark.</p>'
+    + '<div class="stage-legend">'
+    + STAGES.map(function(s){
+        return '<div class="stage-legend-item"><span class="stage-legend-num">'+s.n+'</span><div><b>'+escapeHtml(s.label)+'</b><span>'+escapeHtml(s.desc)+'</span></div></div>';
+      }).join('')
+    + '</div>'
+    + '<div class="modal-actions"><button class="btn primary" id="infoCloseBtn" type="button">Got it</button></div>';
+  openModal(html);
+  byId('infoCloseBtn').addEventListener('click', closeModal);
+}
+function openHiddenTopicsModal(){
+  var hiddenIds = Object.keys(state.hidden).filter(function(id){ return state.hidden[id]; });
+  var hiddenTopics = BASE_TOPICS.filter(function(t){ return hiddenIds.indexOf(t.id)!==-1; });
+  var body;
+  if(hiddenTopics.length===0){
+    body = '<p>No hidden topics. Use &ldquo;Hide from tracker&rdquo; on any topic&rsquo;s notes panel to tuck it away without losing its progress.</p>';
+  } else {
+    body = '<ul class="hidden-list">'+hiddenTopics.map(function(t){
+      return '<li><span>'+escapeHtml(t.name)+'</span><button data-restore="'+t.id+'" type="button">Restore</button></li>';
+    }).join('')+'</ul>';
+  }
+  openModal('<h3>Hidden topics</h3>'+body+'<div class="modal-actions"><button class="btn" id="hiddenCloseBtn" type="button">Close</button></div>');
+  byId('hiddenCloseBtn').addEventListener('click', closeModal);
+  var restoreBtns = document.querySelectorAll('[data-restore]');
+  restoreBtns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var id = btn.getAttribute('data-restore');
+      delete state.hidden[id];
+      persistNow();
+      closeModal();
+      renderAll();
+    });
+  });
+}
+function openBackupModal(){
+  var payload = JSON.stringify({progress:state.progress, hidden:state.hidden, custom:state.custom, collapsed:state.collapsed});
+  var html = '<h3>Back up your progress</h3>'
+    + '<p>Copy this code and save it somewhere safe, like a notes app. Paste it back in with &ldquo;Restore from backup&rdquo; any time your progress looks wrong.</p>'
+    + '<textarea id="backupText" class="code-field" readonly></textarea>'
+    + '<p class="code-status" id="backupStatus">&nbsp;</p>'
+    + '<div class="modal-actions"><button class="btn" id="backupCloseBtn" type="button">Close</button><button class="btn primary" id="backupCopyBtn" type="button">Copy code</button></div>';
+  openModal(html);
+  var ta = byId('backupText');
+  ta.value = payload;
+  byId('backupCloseBtn').addEventListener('click', closeModal);
+  byId('backupCopyBtn').addEventListener('click', function(){
+    ta.focus();
+    ta.select();
+    var status = byId('backupStatus');
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(payload).then(function(){
+        status.textContent = 'Copied to clipboard.';
+      }).catch(function(){
+        status.textContent = 'Couldn\u2019t copy automatically \u2014 the code is selected, so press Ctrl+C (or Cmd+C).';
+      });
+    } else {
+      status.textContent = 'The code is selected \u2014 press Ctrl+C (or Cmd+C) to copy.';
+    }
+  });
+}
+function openRestoreModal(){
+  var html = '<h3>Restore from backup</h3>'
+    + '<p>Paste a backup code below. This replaces your current progress, hidden topics, and added topics with what&rsquo;s in the code.</p>'
+    + '<textarea id="restoreText" class="code-field" placeholder="Paste your backup code here"></textarea>'
+    + '<p class="code-status" id="restoreStatus">&nbsp;</p>'
+    + '<div class="modal-actions"><button class="btn" id="restoreCancelBtn" type="button">Cancel</button><button class="btn primary" id="restoreSaveBtn" type="button">Restore</button></div>';
+  openModal(html);
+  byId('restoreCancelBtn').addEventListener('click', closeModal);
+  byId('restoreSaveBtn').addEventListener('click', function(){
+    var raw = byId('restoreText').value.trim();
+    var statusEl = byId('restoreStatus');
+    if(!raw){ statusEl.textContent = 'Paste a backup code first.'; statusEl.classList.add('is-error'); return; }
+    var parsed;
+    try{ parsed = JSON.parse(raw); }catch(e){ statusEl.textContent = 'That doesn\u2019t look like a valid backup code.'; statusEl.classList.add('is-error'); return; }
+    if(!parsed || typeof parsed !== 'object'){ statusEl.textContent = 'That doesn\u2019t look like a valid backup code.'; statusEl.classList.add('is-error'); return; }
+    state.progress = (parsed.progress && typeof parsed.progress==='object') ? parsed.progress : {};
+    state.hidden = (parsed.hidden && typeof parsed.hidden==='object') ? parsed.hidden : {};
+    state.custom = Array.isArray(parsed.custom) ? parsed.custom : [];
+    state.collapsed = (parsed.collapsed && typeof parsed.collapsed==='object') ? parsed.collapsed : {};
+    persistNow();
+    closeModal();
+    renderAll();
+  });
+}
+function openAddTopicModal(){
+  var modules = computeModules();
+  var options = modules.map(function(m){ return '<option value="'+m.code+'">Week '+m.num+': '+escapeHtml(m.label)+'</option>'; }).join('');
+  var html = '<h3>Add a topic</h3><p>Add anything missing from the syllabus &mdash; it gets the same 7-stage tracker.</p>'
+    + '<div class="modal-field"><label>Topic name</label><input type="text" id="newTopicName" placeholder="e.g. Anticoagulation Reversal" /></div>'
+    + '<div class="modal-field"><label>Module</label><select id="newTopicModule">'+options+'<option value="__new__">+ New module\u2026</option></select></div>'
+    + '<div class="modal-field" id="newModuleWrap" hidden><label>New module name</label><input type="text" id="newModuleName" placeholder="e.g. Extra Topics" /></div>'
+    + '<div class="modal-actions"><button class="btn" id="addCancelBtn" type="button">Cancel</button><button class="btn primary" id="addSaveBtn" type="button">Add topic</button></div>';
+  openModal(html);
+  byId('newTopicModule').addEventListener('change', function(e){ byId('newModuleWrap').hidden = (e.target.value !== '__new__'); });
+  byId('addCancelBtn').addEventListener('click', closeModal);
+  byId('addSaveBtn').addEventListener('click', submitAddTopic);
+  byId('newTopicName').focus();
+}
+function submitAddTopic(){
+  var nameInput = byId('newTopicName');
+  var name = nameInput.value.trim();
+  if(!name){ nameInput.focus(); return; }
+  var modSel = byId('newTopicModule').value;
+  var moduleCode, moduleLabel, moduleNum;
+  if(modSel==='__new__'){
+    var newName = byId('newModuleName').value.trim() || 'Extra Topics';
+    moduleCode = 'CUSTOM-'+slugify(newName);
+    moduleLabel = newName;
+    var nums = computeModules().map(function(m){ return m.num; });
+    moduleNum = nums.length ? Math.max.apply(null, nums)+1 : 1;
+  } else {
+    var m = computeModules().filter(function(x){ return x.code===modSel; })[0];
+    moduleCode = m.code; moduleLabel = m.label; moduleNum = m.num;
+  }
+  var id = 'custom-'+slugify(name)+'-'+Date.now().toString(36);
+  state.custom.push({id:id, name:name, moduleCode:moduleCode, moduleLabel:moduleLabel, moduleNum:moduleNum});
+  persistNow();
+  closeModal();
+  renderAll();
+  requestAnimationFrame(function(){ jumpToTopic(id); });
+}
+
+/* ---------- events ---------- */
+function onModuleListClick(e){
+  var stageBtn = e.target.closest('[data-stage-toggle]');
+  if(stageBtn){ toggleStage(stageBtn.getAttribute('data-stage-toggle'), parseInt(stageBtn.getAttribute('data-stage'),10)); return; }
+  var confBtn = e.target.closest('[data-conf]');
+  if(confBtn){ setConfidence(confBtn.getAttribute('data-conf'), parseInt(confBtn.getAttribute('data-value'),10)); return; }
+  var expandBtn = e.target.closest('[data-expand]');
+  if(expandBtn){ var d = expandBtn.closest('.topic-row').querySelector('.topic-detail'); d.hidden = !d.hidden; return; }
+  var moduleHeader = e.target.closest('[data-toggle-module]');
+  if(moduleHeader){
+    var code = moduleHeader.getAttribute('data-toggle-module');
+    state.collapsed[code] = !state.collapsed[code];
+    persistNow();
+    moduleHeader.closest('.module-section').classList.toggle('collapsed', !!state.collapsed[code]);
+    return;
+  }
+  var removeBtn = e.target.closest('[data-remove]');
+  if(removeBtn){ confirmRemoveTopic(removeBtn.getAttribute('data-remove')); return; }
+  var clearBtn = e.target.closest('#clearFiltersBtn');
+  if(clearBtn){
+    filters = {search:'', status:'all'};
+    byId('searchInput').value = '';
+    resetChipsToAll();
+    renderModules();
+  }
+}
+function onModuleListInput(e){
+  var notesArea = e.target.closest('[data-notes]');
+  if(notesArea){
+    var id = notesArea.getAttribute('data-notes');
+    var prog = ensureProgress(id);
+    prog.notes = notesArea.value;
+    prog.updatedAt = new Date().toISOString();
+    clearTimeout(notesSaveTimer);
+    notesSaveTimer = setTimeout(persistNow, 700);
+    setSaveStatus('saving');
+  }
+}
+function flushPendingSave(){
+  clearTimeout(notesSaveTimer);
+  notesSaveTimer = null;
+  persistNow();
+}
+function bindStaticEvents(){
+  byId('searchInput').addEventListener('input', function(e){ filters.search = e.target.value.trim(); renderModules(); });
+  document.querySelectorAll('#statusChips .chip').forEach(function(chip){
+    chip.addEventListener('click', function(){
+      document.querySelectorAll('#statusChips .chip').forEach(function(c){ c.classList.remove('active'); });
+      chip.classList.add('active');
+      filters.status = chip.getAttribute('data-value');
+      renderModules();
+    });
+  });
+  byId('expandAllBtn').addEventListener('click', function(){ setAllCollapsed(false); });
+  byId('collapseAllBtn').addEventListener('click', function(){ setAllCollapsed(true); });
+  byId('addTopicBtn').addEventListener('click', openAddTopicModal);
+  byId('infoBtn').addEventListener('click', openInfoModal);
+  byId('hiddenTopicsBtn').addEventListener('click', openHiddenTopicsModal);
+  byId('backupBtn').addEventListener('click', openBackupModal);
+  byId('restoreBtn').addEventListener('click', openRestoreModal);
+  byId('resetBtn').addEventListener('click', openResetConfirm);
+  byId('saveStatus').addEventListener('click', function(){ if(byId('saveStatus').classList.contains('error')) persistNow(); });
+  byId('moduleList').addEventListener('click', onModuleListClick);
+  byId('moduleList').addEventListener('input', onModuleListInput);
+  byId('moduleList').addEventListener('blur', function(e){
+    if(e.target && e.target.hasAttribute && e.target.hasAttribute('data-notes')) flushPendingSave();
+  }, true);
+  document.addEventListener('visibilitychange', function(){ if(document.hidden) flushPendingSave(); });
+  window.addEventListener('pagehide', flushPendingSave);
+  byId('moduleNav').addEventListener('click', function(e){
+    var btn = e.target.closest('[data-jump]');
+    if(!btn) return;
+    var code = btn.getAttribute('data-jump');
+    if(state.collapsed[code]){ state.collapsed[code] = false; persistNow(); renderModules(); }
+    var el = byId('mod-'+code);
+    if(el) el.scrollIntoView({behavior: prefersReducedMotion() ? 'auto' : 'smooth', block:'start'});
+  });
+  byId('needsAttentionList').addEventListener('click', function(e){
+    var item = e.target.closest('[data-jump-topic]');
+    if(item) jumpToTopic(item.getAttribute('data-jump-topic'));
+  });
+  byId('modalOverlay').addEventListener('click', function(e){ if(e.target===byId('modalOverlay')) closeModal(); });
+  document.addEventListener('keydown', function(e){
+    if(e.key==='Escape' && byId('modalOverlay').classList.contains('open')) closeModal();
+  });
+}
+
+function applyCollapseDefaultsIfNeeded(){
+  if(Object.keys(state.collapsed).length===0){
+    computeModules().forEach(function(m, idx){ state.collapsed[m.code] = (idx!==0); });
+  }
+}
+function init(){
+  loadState();
+  if(storageBroken) setSaveStatus('nostorage');
+  applyCollapseDefaultsIfNeeded();
+  bindStaticEvents();
+  renderAll();
+}
+document.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+</body>
+</html>
